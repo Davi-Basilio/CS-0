@@ -25,7 +25,7 @@ const audioLoader = new THREE.AudioLoader();
 const sonsEfeitos = {};
 
 const somAmbiente = new THREE.Audio(listener);
-audioLoader.load('/audio/musica-fundo.mp3', (buffer) => {
+audioLoader.load('./audio/musica-fundo.mp3', (buffer) => {
     somAmbiente.setBuffer(buffer);
     somAmbiente.setLoop(true);
     somAmbiente.setVolume(0.35);
@@ -56,13 +56,13 @@ function estruturarSom(nome, caminho) {
 }
 
 // DECLARAÇÃO DOS ÁUDIOS DO JOGO
-estruturarSom('faca', '/audio/facada.wav');
-estruturarSom('pistola', '/audio/pistola.mp3');
-estruturarSom('rifle', '/audio/rifle.wav');
-estruturarSom('escopeta', '/audio/escopeta.mp3');
-estruturarSom('sniper', '/audio/sniper.wav');
-estruturarSom('explosao', '/audio/explosao.wav');
-estruturarSom('morreu', '/audio/morreu.wav'); 
+estruturarSom('faca', './audio/facada.wav');
+estruturarSom('pistola', './audio/pistola.mp3');
+estruturarSom('rifle', './audio/rifle.wav');
+estruturarSom('escopeta', './audio/escopeta.mp3');
+estruturarSom('sniper', './audio/sniper.wav');
+estruturarSom('explosao', './audio/explosao.wav');
+estruturarSom('morreu', './audio/morreu.wav'); 
 
 function executarSom(nome) {
     if (sonsEfeitos[nome]) {
