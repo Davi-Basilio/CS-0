@@ -1,5 +1,0 @@
-prr o gemini ta de tiração. amn eu tenho q falar q
- o código está incompleto pq antes das "melhorias" o jogo tinha
- 1575 linhas de código e agr tem só 714, o q quebra muito o jogo, q ta todo em tela preta
- e falar pra ele ir fazendo umas outras alterações q ele deixou pra dpois,
-  pra n desperdiçar o pro. 

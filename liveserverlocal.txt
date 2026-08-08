@@ -1,5 +1,0 @@
-npm run dev 
-la no terminal
-provavelmente vai soltar um 
-http://localhost:5173/
-dai ctrl c ctrl v no chrome
