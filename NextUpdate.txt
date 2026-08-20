@@ -8,3 +8,4 @@ Próx. Atualização vai ter:
 *Diminuir a sensibilidade da câmera
 *Nerf no Rifle 
 *Bufar a escopeta
+*Adaptação pra pessoas sem mouse
