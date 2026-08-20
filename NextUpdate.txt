@@ -6,3 +6,5 @@ Próx. Atualização vai ter:
 *Fazer os inimigos olharem pra frente enquanto correm pra cima do player, ao invés de andarem de costas
 *Nerfar a mira dos bots
 *Diminuir a sensibilidade da câmera
+*Nerf no Rifle 
+*Bufar a escopeta
