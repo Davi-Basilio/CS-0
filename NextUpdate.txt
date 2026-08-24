@@ -3,7 +3,7 @@ Próx. Atualização vai ter:
 -Correção do braço dos inimigos
 -Correção de papel do boss
 *Fazer o boss de fato
-*Fazer os inimigos olharem pra frente enquanto correm pra cima do player, ao invés de andarem de costas
+°Fazer os inimigos olharem pra frente enquanto correm pra cima do player, ao invés de andarem de costas
 *Nerfar a mira dos bots
 -Diminuir a sensibilidade da câmera
 *Nerf no Rifle dos inimigos - cadência 
@@ -17,3 +17,4 @@ Legenda:
 - Significa algo adicional, algo menos importante
 /Significa uma tarefa que precisa ser feita antes de outra
 \Significa que precisa uma certa tarefa (/) pra fazer
+° Significa q foi feito
