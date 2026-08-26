@@ -1,20 +1,20 @@
 Próx. Atualização vai ter:
 
 °Correção do braço dos inimigos
--Correção de papel do boss
-*Fazer o boss de fato
+\Correção de papel do boss
+/Fazer o boss de fato
 °Fazer os inimigos olharem pra frente enquanto correm pra cima do player, ao invés de andarem de costas
-*Nerfar a mira dos bots
--Diminuir a sensibilidade da câmera
-*Nerf no Rifle dos inimigos - cadência 
+°Nerfar a mira dos bots
+°Diminuir a sensibilidade da câmera
+°Nerf no Rifle dos inimigos - cadência 
 /Bufar a escopeta - de ambos - fazer com os tiros sejam mais juntos
 \Bot com escopeta - pode atirar de longe agr 
-*Adaptação pra pessoas com notebook sem mouse
-*Outros bugs de desempenho
+°Adaptação pra pessoas com notebook sem mouse
+°Outros bugs de desempenho
 
 Legenda:
 * Significa prioridade
 - Significa algo adicional, algo menos importante
 /Significa uma tarefa que precisa ser feita antes de outra
 \Significa que precisa uma certa tarefa (/) pra fazer
-° Significa q foi feito
+° Significa q foi feito.
