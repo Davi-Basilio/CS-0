@@ -1,0 +1,2 @@
+(v1.0.1)
+Arrumar animação de morte do boss
