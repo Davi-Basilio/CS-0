@@ -2,7 +2,7 @@
   <h1 align="center">CS 0 </h1>
   <h3 align="center">Simplesmente Uau</h3>
 </div>
-
+ISSO AQUI AINDA É A BETA DO JOGO
 <p align="center">
   <img src="./public/CS0-demo.png" width="500" alt="Demonstração do jogo" style="border-radius: 12px;"/>
 </p>
