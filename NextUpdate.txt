@@ -1,8 +1,4 @@
 Próx. Atualização vai ter:
 
-*Correção do braço dos inimigos
-*Correção de papel do boss
-*Fazer o boss de fato
-*Fazer os inimigos olharem pra frente enquanto correm pra cima do player, ao invés de andarem de costas
-*Nerfar a mira dos bots
-*Diminuir a sensibilidade da câmera
+*Lore e buffs ao decorrer do jogo 
+*Desenvolver operação 2
