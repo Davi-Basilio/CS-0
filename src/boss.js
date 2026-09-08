@@ -84,7 +84,9 @@ const RAIO_PEDRA = 0.5;
 const CHANCE_ARREMESSO_NO_ALCANCE_INVESTIDA = 0.4;
 
 // SEQUÊNCIA DE MORTE (quebra + revelação de robô)
-const GRAVIDADE_QUEBRA = 0.012;
+const DURACAO_QUEBRA = 1400; // ms — dura a animação toda, do impacto até pousar
+const ALTURA_ARCO_CIMA = 1.4; // o quanto a metade de cima sobe no meio da animação
+const ALTURA_ARCO_BAIXO = 0.9; // pernas são mais "pesadas", sobem menos
 const RAIO_COLETA = 3.5; // distância pra mostrar "pressione E" e poder recolher
 
 // Textura do tanquinho (sem camisa) — só usada na face da frente do tronco
@@ -200,10 +202,9 @@ export class Boss {
     // usados só na sequência de morte
     this.partesCima = null;
     this.partesBaixo = null;
-    this.velCima = new THREE.Vector3();
-    this.velBaixo = new THREE.Vector3();
-    this.rotVelCima = new THREE.Vector3();
-    this.rotVelBaixo = new THREE.Vector3();
+    this.inicioQuebra = 0;
+    this.poseCima = null; // { posInicial, posFinal, rotYInicial, rotFinal }
+    this.poseBaixo = null;
     this.posicaoRecolha = new THREE.Vector3();
     this.pertoDasPartes = false;
 
@@ -506,6 +507,32 @@ export class Boss {
   // ==========================================
   // SEQUÊNCIA DE MORTE — quebra ao meio e revela que ele era um robô
   // ==========================================
+
+  // Move a origem do grupo pro centro visual real dele (medindo a caixa
+  // delimitadora), deslocando os filhos pro lado oposto pra não mudar
+  // nada visualmente. Sem isso, o pivô de rotação fica na altura dos pés
+  // (bem abaixo da cabeça/tronco), e girar o grupo faz ele chicotear pra
+  // longe em vez de tombar no lugar como um objeto de verdade tombaria.
+  // Devolve uma altura de descanso aproximada pra quando a peça terminar
+  // de tombar (metade da menor dimensão dela, já que a maior — a altura
+  // "de pé" — vira o comprimento deitado depois do tombo de 90°).
+  recentralizarNoCentroVisual(grupo) {
+    grupo.updateMatrixWorld(true);
+    const caixa = new THREE.Box3().setFromObject(grupo);
+    const centroMundo = caixa.getCenter(new THREE.Vector3());
+    const centroLocal = grupo.worldToLocal(centroMundo.clone());
+
+    grupo.children.forEach((filho) => {
+      filho.position.sub(centroLocal);
+    });
+
+    grupo.position.copy(centroMundo);
+    grupo.updateMatrixWorld(true);
+
+    const tamanho = caixa.getSize(new THREE.Vector3());
+    return Math.min(tamanho.x, tamanho.z) / 2 + 0.08;
+  }
+
   iniciarSequenciaMorte() {
     this.podeSerAlvo = false;
     this.exibirTagVida = false;
@@ -572,64 +599,119 @@ export class Boss {
     scene.remove(this.mesh);
     scene.add(this.partesCima, this.partesBaixo);
 
-    // impulso de separação, cada metade indo pra um lado diferente
-    this.velCima.set(
-      (Math.random() - 0.5) * 0.15,
-      0.22,
-      (Math.random() - 0.5) * 0.15 - 0.08,
-    );
-    this.velBaixo.set(
-      (Math.random() - 0.5) * 0.1,
-      0.08,
-      (Math.random() - 0.5) * 0.1 + 0.08,
-    );
-    this.rotVelCima.set(
-      (Math.random() - 0.5) * 0.12,
-      (Math.random() - 0.5) * 0.12,
-      0.14,
-    );
-    this.rotVelBaixo.set(
-      (Math.random() - 0.5) * 0.08,
-      (Math.random() - 0.5) * 0.08,
-      -0.06,
+    // CORREÇÃO DO PIVÔ: a origem de cada grupo tá na altura dos pés
+    // (onde this.mesh.position tava), bem abaixo do centro visual real
+    // da cabeça/tronco (ou das pernas). Girar em torno de um pivô tão
+    // longe do centro faz a peça "chicotear" pra longe em vez de
+    // tombar no lugar. Aqui a gente mede o centro visual de cada grupo
+    // e realoca a origem pra lá, deslocando os filhos pro lado oposto
+    // — sem mudar nada visualmente, só trocando o ponto de rotação.
+    const alturaMinimaCima = this.recentralizarNoCentroVisual(this.partesCima);
+    const alturaMinimaBaixo = this.recentralizarNoCentroVisual(
+      this.partesBaixo,
     );
 
+    // Calcula a pose final de cada metade: espalhadas em direções
+    // aleatórias, tombadas ~90° (deitadas), com um giro livre no eixo
+    // vertical pra não ficarem simétricas/previsíveis
+    const anguloCima = Math.random() * Math.PI * 2;
+    const distCima = 1.1 + Math.random() * 0.7;
+    const anguloBaixo = Math.random() * Math.PI * 2;
+    const distBaixo = 0.8 + Math.random() * 0.5;
+
+    this.poseCima = {
+      posInicial: this.partesCima.position.clone(),
+      posFinal: new THREE.Vector3(
+        this.partesCima.position.x + Math.cos(anguloCima) * distCima,
+        alturaMinimaCima,
+        this.partesCima.position.z + Math.sin(anguloCima) * distCima,
+      ),
+      rotFinal: new THREE.Euler(
+        Math.PI / 2 + (Math.random() - 0.5) * 0.5,
+        this.mesh.rotation.y + Math.random() * Math.PI * 2,
+        (Math.random() - 0.5) * 0.6,
+      ),
+    };
+    this.poseBaixo = {
+      posInicial: this.partesBaixo.position.clone(),
+      posFinal: new THREE.Vector3(
+        this.partesBaixo.position.x + Math.cos(anguloBaixo) * distBaixo,
+        alturaMinimaBaixo,
+        this.partesBaixo.position.z + Math.sin(anguloBaixo) * distBaixo,
+      ),
+      rotFinal: new THREE.Euler(
+        Math.PI / 2 + (Math.random() - 0.5) * 0.5,
+        this.mesh.rotation.y + Math.random() * Math.PI * 2,
+        (Math.random() - 0.5) * 0.6,
+      ),
+    };
+
+    this.inicioQuebra = Date.now();
     this.faseMorte = "quebrando";
   }
 
   atualizarQuebra() {
-    this.partesCima.position.add(this.velCima);
-    this.velCima.y -= GRAVIDADE_QUEBRA;
-    this.partesCima.rotation.x += this.rotVelCima.x;
-    this.partesCima.rotation.y += this.rotVelCima.y;
-    this.partesCima.rotation.z += this.rotVelCima.z;
+    const progresso = Math.min(
+      1,
+      (Date.now() - this.inicioQuebra) / DURACAO_QUEBRA,
+    );
+    // ease-out cúbico: rápido no início, desacelera suave até parar —
+    // sem isso, o "pouso" no fim ficaria brusco/robótico
+    const suave = 1 - Math.pow(1 - progresso, 3);
 
-    this.partesBaixo.position.add(this.velBaixo);
-    this.velBaixo.y -= GRAVIDADE_QUEBRA;
-    this.partesBaixo.rotation.x += this.rotVelBaixo.x;
-    this.partesBaixo.rotation.z += this.rotVelBaixo.z;
+    this.aplicarPose(
+      this.partesCima,
+      this.poseCima,
+      suave,
+      progresso,
+      ALTURA_ARCO_CIMA,
+    );
+    this.aplicarPose(
+      this.partesBaixo,
+      this.poseBaixo,
+      suave,
+      progresso,
+      ALTURA_ARCO_BAIXO,
+    );
 
-    let cimaPousou = false;
-    let baixoPousou = false;
-
-    if (this.partesCima.position.y <= 0.3) {
-      this.partesCima.position.y = 0.3;
-      this.velCima.set(0, 0, 0);
-      cimaPousou = true;
-    }
-    if (this.partesBaixo.position.y <= 0.15) {
-      this.partesBaixo.position.y = 0.15;
-      this.velBaixo.set(0, 0, 0);
-      baixoPousou = true;
-    }
-
-    if (cimaPousou && baixoPousou) {
+    if (progresso >= 1) {
       this.posicaoRecolha
-        .copy(this.partesCima.position)
-        .add(this.partesBaixo.position)
+        .copy(this.poseCima.posFinal)
+        .add(this.poseBaixo.posFinal)
         .multiplyScalar(0.5);
       this.faseMorte = "aguardando_coleta";
     }
+  }
+
+  // Interpola uma metade da pose inicial (em pé) até a pose final (caída
+  // no chão), com um arco no eixo Y (sobe no meio do movimento, desaba no
+  // final) em vez de uma queda reta — fica muito mais dramático que só
+  // deslizar direto pro chão.
+  aplicarPose(grupo, pose, suave, progresso, alturaArco) {
+    grupo.position.x = THREE.MathUtils.lerp(
+      pose.posInicial.x,
+      pose.posFinal.x,
+      suave,
+    );
+    grupo.position.z = THREE.MathUtils.lerp(
+      pose.posInicial.z,
+      pose.posFinal.z,
+      suave,
+    );
+    const yBase = THREE.MathUtils.lerp(
+      pose.posInicial.y,
+      pose.posFinal.y,
+      suave,
+    );
+    grupo.position.y = yBase + Math.sin(progresso * Math.PI) * alturaArco;
+
+    grupo.rotation.x = THREE.MathUtils.lerp(0, pose.rotFinal.x, suave);
+    grupo.rotation.y = THREE.MathUtils.lerp(
+      this.mesh.rotation.y,
+      pose.rotFinal.y,
+      suave,
+    );
+    grupo.rotation.z = THREE.MathUtils.lerp(0, pose.rotFinal.z, suave);
   }
 
   atualizarColeta() {

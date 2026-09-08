@@ -164,6 +164,23 @@ function adicionarArmaAoBot(bracoDir, tipo) {
     cano.rotation.x = Math.PI / 2;
     cano.position.set(0, 0, -0.35);
     grupoArmaBot.add(corpo, cano);
+  } else if (tipo === "Mini Uzi") {
+    const corpo = new THREE.Mesh(
+      new THREE.BoxGeometry(0.04, 0.07, 0.14),
+      new THREE.MeshStandardMaterial({ color: 0x1a1a1a }),
+    );
+    const cano = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.012, 0.012, 0.16),
+      new THREE.MeshStandardMaterial({ color: 0x0d0d0d }),
+    );
+    cano.rotation.x = Math.PI / 2;
+    cano.position.set(0, 0, -0.16);
+    const carregador = new THREE.Mesh(
+      new THREE.BoxGeometry(0.02, 0.12, 0.025),
+      new THREE.MeshStandardMaterial({ color: 0x111111 }),
+    );
+    carregador.position.set(0, -0.09, 0);
+    grupoArmaBot.add(corpo, cano, carregador);
   }
 
   // CORREÇÃO DA ORIENTAÇÃO DA ARMA NA MÃO DO BOT:
@@ -181,13 +198,28 @@ export class Inimigo {
     this.ultimoAtaque = Date.now() + Math.random() * 1000;
     this.jogouGranada = false;
 
-    const sorteio = Math.random() * 110;
-    if (sorteio < 22) this.tipo = "Faca";
-    else if (sorteio < 50) this.tipo = "Pistola";
-    else if (sorteio < 78) this.tipo = "Rifle";
-    else if (sorteio < 95) this.tipo = "Escopeta";
-    else {
-      this.tipo = "Sniper";
+    // Mini Uzi só entra no sorteio depois que o player derrota o boss e
+    // recolhe as peças — antes disso nenhum bot tem ela (fica só o
+    // sorteio original, sem mexer nas proporções que já existiam)
+    if (estadoJogo.bossDerrotado) {
+      const sorteio = Math.random() * 130;
+      if (sorteio < 22) this.tipo = "Faca";
+      else if (sorteio < 50) this.tipo = "Pistola";
+      else if (sorteio < 78) this.tipo = "Rifle";
+      else if (sorteio < 95) this.tipo = "Escopeta";
+      else if (sorteio < 110) this.tipo = "Sniper";
+      else {
+        this.tipo = "Mini Uzi";
+      }
+    } else {
+      const sorteio = Math.random() * 110;
+      if (sorteio < 22) this.tipo = "Faca";
+      else if (sorteio < 50) this.tipo = "Pistola";
+      else if (sorteio < 78) this.tipo = "Rifle";
+      else if (sorteio < 95) this.tipo = "Escopeta";
+      else {
+        this.tipo = "Sniper";
+      }
     }
 
     let corColeteHex = "#1f2e1f";
@@ -482,6 +514,16 @@ export class Inimigo {
       corTracer = 0xff0000;
       som = "sniper";
       chanceDeAcerto = 1.0; // a Sniper não entra no nerf de precisão — continua sempre certeira
+    } else if (this.tipo === "Mini Uzi") {
+      // Cadência mais rápida que a do Rifle (300ms), tiro vesgo: só
+      // 70% de chance real de acerto (a pedido, um pouco menor que os
+      // 85% do player)
+      firerate = 220;
+      dano = 5;
+      headshotChance = 0.05;
+      corTracer = 0xffff00;
+      som = "uzi";
+      chanceDeAcerto = 0.7;
     }
 
     if (agora - this.ultimoAtaque < firerate) return;
@@ -630,6 +672,11 @@ export class Inimigo {
       if (dist < 25.0) {
         this.moverBot(-dir.x, -dir.z, 0.06);
       }
+      this.botAtirarNoPlayer();
+    } else if (this.tipo === "Mini Uzi") {
+      // Arma automática de curto alcance — se aproxima mais rápido e
+      // mais perto que Pistola/Rifle antes de parar pra atirar
+      if (dist > 9.0) this.moverBot(dir.x, dir.z, 0.065);
       this.botAtirarNoPlayer();
     }
   }

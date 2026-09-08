@@ -135,6 +135,7 @@ function atirar() {
   } else if (weapon.tipo === "bala") {
     if (weapon.nome === "Pistola") executarSom("pistola");
     if (weapon.nome === "Rifle") executarSom("rifle");
+    if (weapon.nome === "Mini Uzi") executarSom("uzi");
 
     const hits = raycasterTiro.intersectObjects(todosAlvos, false);
     let pt =
@@ -144,7 +145,12 @@ function atirar() {
             .clone()
             .add(raycasterTiro.ray.direction.clone().multiplyScalar(100));
 
-    if (hits.length > 0) {
+    // Armas sem chanceDeAcerto definida sempre acertam o que tá na
+    // mira (Pistola/Rifle). A Mini Uzi é "vesga" de propósito: mesmo
+    // acertando a mira, só 85% dos tiros realmente conectam.
+    const chanceDeAcerto = weapon.chanceDeAcerto ?? 1.0;
+
+    if (hits.length > 0 && Math.random() < chanceDeAcerto) {
       const atingido = hits[0].object.userData;
       if (
         atingido &&
@@ -262,9 +268,12 @@ window.addEventListener("wheel", (event) => {
     novoIndex =
       (novoIndex + direcaoTroca + inventario.length) % inventario.length;
   } while (
-    inventario[novoIndex].nome === "Granada" &&
-    inventario[novoIndex].munição === 0 &&
-    novoIndex !== indexOriginal
+    (inventario[novoIndex].nome === "Granada" &&
+      inventario[novoIndex].munição === 0 &&
+      novoIndex !== indexOriginal) ||
+    (inventario[novoIndex].nome === "Mini Uzi" &&
+      !estadoJogo.bossDerrotado &&
+      novoIndex !== indexOriginal)
   );
 
   selecionarArma(novoIndex);
@@ -276,8 +285,8 @@ window.addEventListener("wheel", (event) => {
 // ==========================================
 // Alternativa ao scroll pra quem joga de notebook/trackpad. Usa os números
 // da linha de cima do teclado (não o numérico), na mesma ordem do
-// inventário: 1 Faca, 2 Pistola, 3 Rifle, 4 Escopeta, 5 Granada, 6 Sniper.
-const TECLAS_ARMA = { 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5 };
+// inventário: 1 Faca, 2 Pistola, 3 Rifle, 4 Escopeta, 5 Granada, 6 Sniper, 7 Mini Uzi.
+const TECLAS_ARMA = { 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6 };
 
 window.addEventListener("keydown", (e) => {
   if (
@@ -293,6 +302,7 @@ window.addEventListener("keydown", (e) => {
   if (novoIndex === estadoArmas.armaAtualIndex) return;
 
   const arma = inventario[novoIndex];
+  if (arma.nome === "Mini Uzi" && !estadoJogo.bossDerrotado) return; // travada até derrotar o boss
   if (arma.munição === 0) return; // mesma regra do scroll: sem munição não seleciona
 
   selecionarArma(novoIndex);

@@ -35,6 +35,7 @@ export const recargaMunicao = {
   escopeta: 15,
   granada: 5,
   sniper: 10,
+  miniuzi: 100,
 };
 
 // ==========================================
@@ -90,6 +91,17 @@ export const inventario = [
     firerate: 2000,
     tipo: "sniper",
     corTracer: 0xff0000,
+  },
+  // Cadência um pouco mais rápida que o Rifle (100ms) e tiro meio "vesgo":
+  // 85% de chance real de acerto mesmo mirando certo (ver disparos.js)
+  {
+    nome: "Mini Uzi",
+    munição: 0,
+    dano: 10,
+    firerate: 80,
+    tipo: "bala",
+    corTracer: 0xffff00,
+    chanceDeAcerto: 0.85,
   },
 ];
 

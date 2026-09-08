@@ -60,6 +60,7 @@ estruturarSom("intro", "./audio/intro.wav"); // rugido de quando ele spawna
 estruturarSom("passos", "./audio/passos.wav"); // um passo só — tocado em loop manual no boss.js
 estruturarSom("vento", "./audio/vento.mp3"); // whoosh do arremesso de pedra
 estruturarSom("pedra-no-chao", "./audio/pedra-no-chao.mp3"); // impacto da pedra (no player ou no chão)
+estruturarSom("uzi", "./audio/uzi.mp3");
 
 // TEMA DO BOSS — como é música (toca em loop, não é efeito de um tiro só),
 // segue o mesmo padrão do somAmbiente em vez de entrar em sonsEfeitos.

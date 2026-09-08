@@ -87,6 +87,14 @@ function aplicarRecargaCompleta() {
   inventario[5].munição = Math.round(
     recargaMunicao.sniper * estadoJogo.multiplicadorMunicao,
   );
+  // Mini Uzi só recebe munição depois que o player já derrotou o boss e
+  // recolheu as peças — antes disso ela fica travada em 0, mesmo já
+  // existindo no inventário (senão o player teria a arma antes de "ganhá-la")
+  if (estadoJogo.bossDerrotado) {
+    inventario[6].munição = Math.round(
+      recargaMunicao.miniuzi * estadoJogo.multiplicadorMunicao,
+    );
+  }
 }
 
 export class CaixaItem {
