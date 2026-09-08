@@ -1,5 +1,5 @@
 Próx. Atualização vai ter:
-(v1.1.0)
+(v1.2.0)
 
 *Lore do jogo mais avançada
 *Operação 2
