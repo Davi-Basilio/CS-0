@@ -9,8 +9,8 @@ export const controles = new PointerLockControls(camera, document.body);
 
 // SENSIBILIDADE DA CÂMERA: o PointerLockControls já expõe essa propriedade
 // pronta pra isso (padrão é 1.0 = sensibilidade "crua" do mouse do sistema).
-// 0.6 deixa o giro ~40% mais lento.
-controles.pointerSpeed = 0.6;
+// Já tava em 0.6 (~40% mais lento); baixei mais um pouco pra 0.45.
+controles.pointerSpeed = 0.45;
 
 document.addEventListener("click", () => {
   if (

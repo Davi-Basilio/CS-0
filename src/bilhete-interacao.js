@@ -5,6 +5,7 @@ import { telaIntro, telaCapitulo2, telaBilhete, avisoAcao } from "./ui.js";
 import { objPapel } from "./bilhete3d.js";
 import { spawnarBoss } from "./boss.js";
 import { spawnarCaixaCapitulo2 } from "./caixas.js";
+import { somAmbiente, musicaCap2 } from "./audio.js";
 
 // ==========================================
 // TELA INICIAL / CAPÍTULO 2 (ESPAÇO) E INTERAÇÃO COM O BILHETE (TECLA E)
@@ -19,6 +20,9 @@ window.addEventListener("keydown", (e) => {
       telaCapitulo2.style.display = "none";
       controles.lock();
       spawnarCaixaCapitulo2();
+      // troca a ambiente normal pela música mais dark do capítulo 2
+      if (somAmbiente.isPlaying) somAmbiente.stop();
+      if (musicaCap2.buffer && !musicaCap2.isPlaying) musicaCap2.play();
     } else {
       telaIntro.style.display = "none";
       controles.lock();

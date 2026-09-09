@@ -71,6 +71,15 @@ audioLoader.load("./audio/musica-boss.mp3", (buffer) => {
   musicaBoss.setVolume(0.4);
 });
 
+// TEMA DO CAPÍTULO 2 — vibe mais dark, entra no lugar da ambiente normal
+// assim que o player fecha a tela de briefing pós-boss.
+export const musicaCap2 = new THREE.Audio(listener);
+audioLoader.load("./audio/cap2.mp3", (buffer) => {
+  musicaCap2.setBuffer(buffer);
+  musicaCap2.setLoop(true);
+  musicaCap2.setVolume(0.4);
+});
+
 export function executarSom(nome) {
   if (sonsEfeitos[nome]) {
     if (sonsEfeitos[nome].isPlaying) sonsEfeitos[nome].stop();
