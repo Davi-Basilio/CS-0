@@ -4,7 +4,7 @@ import {
   estadoJogo,
   alvosInimigos,
   listaMeshesParedes,
-  MAX_INIMIGOS,
+  getMaxInimigos,
 } from "./estado.js";
 import { checarPosicaoValida } from "./mapa.js";
 import { containerHPs, updateHUD, verificarMortePlayer } from "./ui.js";
@@ -181,6 +181,19 @@ function adicionarArmaAoBot(bracoDir, tipo) {
     );
     carregador.position.set(0, -0.09, 0);
     grupoArmaBot.add(corpo, cano, carregador);
+  } else if (tipo === "Facão") {
+    // Bem maior/mais larga que a faca comum — o player precisa
+    // reconhecer isso de longe antes de deixar ele chegar perto
+    const cabo = new THREE.Mesh(
+      new THREE.BoxGeometry(0.025, 0.035, 0.14),
+      new THREE.MeshStandardMaterial({ color: 0x1a1005 }),
+    );
+    const lamina = new THREE.Mesh(
+      new THREE.BoxGeometry(0.006, 0.05, 0.3),
+      new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.15 }),
+    );
+    lamina.position.set(0, 0.008, -0.24);
+    grupoArmaBot.add(cabo, lamina);
   }
 
   // CORREÇÃO DA ORIENTAÇÃO DA ARMA NA MÃO DO BOT:
@@ -193,24 +206,29 @@ export class Inimigo {
   constructor(x, z) {
     this.mesh = new THREE.Group();
     this.mesh.position.set(x, 0, z);
-    this.saúde = 100;
     this.alerta = false;
     this.ultimoAtaque = Date.now() + Math.random() * 1000;
     this.jogouGranada = false;
 
-    // Mini Uzi só entra no sorteio depois que o player derrota o boss e
-    // recolhe as peças — antes disso nenhum bot tem ela (fica só o
-    // sorteio original, sem mexer nas proporções que já existiam)
-    if (estadoJogo.bossDerrotado) {
-      const sorteio = Math.random() * 130;
+    // Trava no momento do spawn se esse bot é "do capítulo 2" — usado
+    // tanto pra liberar Mini Uzi/Facão no sorteio quanto pro buff geral
+    // de 15% em tudo (vida, dano, cadência, precisão, velocidade)
+    this.capitulo2 = estadoJogo.bossDerrotado;
+
+    // Mini Uzi e Facão só entram no sorteio depois que o player derrota
+    // o boss — antes disso fica só o sorteio original, sem mexer nas
+    // proporções que já existiam
+    if (this.capitulo2) {
+      const sorteio = Math.random() * 140;
       if (sorteio < 22) this.tipo = "Faca";
       else if (sorteio < 50) this.tipo = "Pistola";
       else if (sorteio < 78) this.tipo = "Rifle";
       else if (sorteio < 95) this.tipo = "Escopeta";
       else if (sorteio < 110) this.tipo = "Sniper";
+      else if (sorteio < 130) this.tipo = "Mini Uzi";
       else {
-        this.tipo = "Mini Uzi";
-      }
+        this.tipo = "Facão";
+      } // raro (10/140) — bem devagar, mas hit-kill no toque
     } else {
       const sorteio = Math.random() * 110;
       if (sorteio < 22) this.tipo = "Faca";
@@ -221,6 +239,17 @@ export class Inimigo {
         this.tipo = "Sniper";
       }
     }
+
+    // O Facão tem vida própria (500, fixa) — não é um valor derivado do
+    // baseline de 100 então não recebe o buff geral de 15% em cima
+    // (senão viraria um número estranho tipo 575 que ninguém pediu).
+    // Todo o resto continua na base de 100, com +15% se for capítulo 2.
+    this.saúde =
+      this.tipo === "Facão"
+        ? 500
+        : this.capitulo2
+          ? Math.round(100 * 1.15)
+          : 100;
 
     let corColeteHex = "#1f2e1f";
     let corColeteVal = 0x1f2e1f;
@@ -233,6 +262,13 @@ export class Inimigo {
       corColeteHex = "#111111";
       corColeteVal = 0x111111;
       corCalca = 0x111111;
+    } else if (this.tipo === "Facão") {
+      // vermelho bem escuro/sinistro, pra ser reconhecível de longe —
+      // esse cara tem 5x a vida normal e mata no toque, o player
+      // precisa conseguir identificar ele rápido
+      corColeteHex = "#3d0000";
+      corColeteVal = 0x3d0000;
+      corCalca = 0x1a1a1a;
     }
 
     // Sorteio de cor de cabelo curto (Preto, Castanho, Loiro, Ruivo)
@@ -382,6 +418,12 @@ export class Inimigo {
       botaDir,
     );
 
+    // Facão é maior que o inimigo comum (1.25x) — ajuda o player a
+    // reconhecer de longe que é o bicho perigoso, não um grunt qualquer
+    if (this.tipo === "Facão") {
+      this.mesh.scale.setScalar(1.25);
+    }
+
     this.mesh.traverse((membro) => {
       if (membro instanceof THREE.Mesh) {
         membro.userData = { tipo: "inimigo", objeto: this, parte: membro.name };
@@ -423,15 +465,25 @@ export class Inimigo {
       estadoJogo.kills++;
       updateHUD();
 
-      if (estadoJogo.kills % 3 === 0) spawnarCaixaLoot("vida");
-      if (estadoJogo.kills % 10 === 0) spawnarCaixaLoot("munição");
+      // TIMING DE LOOT: capítulo 1 mantém o esquema original. No
+      // capítulo 2 (pós-boss), vida cai a cada 5 kills (em vez de 3),
+      // e munição não é mais recorrente — só em dois marcos fixos: 31
+      // kills, e 43 kills (esse coincide com o evento do Ladrão).
+      if (estadoJogo.bossDerrotado) {
+        if (estadoJogo.kills % 5 === 0) spawnarCaixaLoot("vida");
+        if (estadoJogo.kills === 31 || estadoJogo.kills === 43)
+          spawnarCaixaLoot("munição");
+      } else {
+        if (estadoJogo.kills % 3 === 0) spawnarCaixaLoot("vida");
+        if (estadoJogo.kills % 10 === 0) spawnarCaixaLoot("munição");
+      }
 
       // REGRA DE SPAWN:
       // A partir de 17 kills, NÃO nascem mais novos inimigos.
       // Os 3 inimigos existentes vão morrendo (17 -> 3, 18 -> 2, 19 -> 1, 20 -> 0).
       if (
         (estadoJogo.kills < 17 || estadoJogo.bossDerrotado) &&
-        alvosInimigos.length < MAX_INIMIGOS
+        alvosInimigos.length < getMaxInimigos()
       ) {
         spawnarInimigoAleatorio();
       }
@@ -443,8 +495,12 @@ export class Inimigo {
   }
 
   moverBot(dirX, dirZ, vel) {
-    const nextX = this.mesh.position.x + dirX * vel;
-    const nextZ = this.mesh.position.z + dirZ * vel;
+    // buff de 15% de velocidade pra qualquer bot do capítulo 2 — fica
+    // aqui dentro (em vez de em cada chamada) pra valer pra todo tipo
+    // de uma vez só
+    const velFinal = this.capitulo2 ? vel * 1.15 : vel;
+    const nextX = this.mesh.position.x + dirX * velFinal;
+    const nextZ = this.mesh.position.z + dirZ * velFinal;
 
     if (checarPosicaoValida(nextX, this.mesh.position.z, 0.5)) {
       this.mesh.position.x = nextX;
@@ -481,10 +537,28 @@ export class Inimigo {
 
     if (this.tipo === "Faca") {
       if (this.mesh.position.distanceTo(camera.position) < 2.5) {
-        if (agora - this.ultimoAtaque > 500) {
+        const cooldownFaca = this.capitulo2 ? 500 * 0.85 : 500;
+        if (agora - this.ultimoAtaque > cooldownFaca) {
           this.ultimoAtaque = agora;
           executarSom("faca");
-          estadoJogo.saúdePlayer = Math.max(0, estadoJogo.saúdePlayer - 35);
+          const danoFaca = this.capitulo2 ? Math.round(35 * 1.15) : 35;
+          estadoJogo.saúdePlayer = Math.max(
+            0,
+            estadoJogo.saúdePlayer - danoFaca,
+          );
+          updateHUD();
+          verificarMortePlayer();
+        }
+      }
+      return;
+    } else if (this.tipo === "Facão") {
+      // Hit-kill garantido no toque — não passa pelo buff geral de
+      // 15% (não faz sentido "buffar" um instakill), valores fixos
+      if (this.mesh.position.distanceTo(camera.position) < 3.0) {
+        if (agora - this.ultimoAtaque > 800) {
+          this.ultimoAtaque = agora;
+          executarSom("faca");
+          estadoJogo.saúdePlayer = 0;
           updateHUD();
           verificarMortePlayer();
         }
@@ -526,6 +600,17 @@ export class Inimigo {
       chanceDeAcerto = 0.7;
     }
 
+    // BUFF DO CAPÍTULO 2: 15% em cima de tudo — dano maior, cadência
+    // mais rápida (por isso o firerate MULTIPLICA por 0.85: quanto
+    // menor o cooldown, mais rápido atira), mais chance de headshot e
+    // de acerto (essas duas com teto em 100%, óbvio)
+    if (this.capitulo2) {
+      firerate *= 0.85;
+      dano = Math.round(dano * 1.15);
+      headshotChance = Math.min(1, headshotChance * 1.15);
+      chanceDeAcerto = Math.min(1, chanceDeAcerto * 1.15);
+    }
+
     if (agora - this.ultimoAtaque < firerate) return;
     if (!this.temLinhaDeVisaoLimpa()) return;
 
@@ -550,7 +635,12 @@ export class Inimigo {
       );
 
       const espalhamentoAtual = 0.5 + fator * (3.0 - 0.5);
-      const chanceAtual = 0.85 - fator * (0.85 - 0.3);
+      let chanceAtual = 0.85 - fator * (0.85 - 0.3);
+      let danoPelotaAtual = 5;
+      if (this.capitulo2) {
+        chanceAtual = Math.min(1, chanceAtual * 1.15);
+        danoPelotaAtual = Math.round(danoPelotaAtual * 1.15);
+      }
 
       let pelotasAcertaram = 0;
       for (let i = 0; i < 5; i++) {
@@ -565,7 +655,7 @@ export class Inimigo {
       if (pelotasAcertaram > 0) {
         estadoJogo.saúdePlayer = Math.max(
           0,
-          estadoJogo.saúdePlayer - pelotasAcertaram * 5,
+          estadoJogo.saúdePlayer - pelotasAcertaram * danoPelotaAtual,
         );
         updateHUD();
         verificarMortePlayer();
@@ -678,13 +768,20 @@ export class Inimigo {
       // mais perto que Pistola/Rifle antes de parar pra atirar
       if (dist > 9.0) this.moverBot(dir.x, dir.z, 0.065);
       this.botAtirarNoPlayer();
+    } else if (this.tipo === "Facão") {
+      // Só um pouco mais lento que os bots padrão (0.05-0.065) — era
+      // 0.03 antes, o que ficou devagar demais ("mais lento que uma
+      // tartaruga"). A ameaça dele continua sendo o hit-kill no
+      // toque, não precisa ser excruciantemente lento pra isso.
+      this.moverBot(dir.x, dir.z, 0.045);
+      this.botAtirarNoPlayer();
     }
   }
 }
 
 export function spawnarInimigoAleatorio() {
   if (
-    alvosInimigos.length >= MAX_INIMIGOS ||
+    alvosInimigos.length >= getMaxInimigos() ||
     (estadoJogo.kills >= 17 && !estadoJogo.bossDerrotado)
   )
     return;

@@ -15,7 +15,7 @@ import { grupoFaca } from "./armas-visuais.js";
 import { teclas, velocidadeCaminhar, velocidadeCorrer } from "./input.js";
 import { tentarAtirar } from "./disparos.js";
 import { checarPosicaoValida } from "./mapa.js";
-import { boss } from "./boss.js";
+import { boss } from "./oBruto.js";
 
 // ==========================================
 // LOOP DE EXECUÇÃO E ANIMAÇÃO PRINCIPAL

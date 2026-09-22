@@ -16,7 +16,11 @@ export const estadoJogo = {
   multiplicadorMunicao: 1.0, // sobe pra 1.5 depois do capítulo 2 (melhoria nas armas)
 };
 
-export const MAX_INIMIGOS = 3;
+// Máximo de inimigos vivos ao mesmo tempo. Vira função (não constante) porque
+// muda pelo jogo: 3 até derrotar o Fornecedor, 4 no capítulo 2 em diante.
+export function getMaxInimigos() {
+  return estadoJogo.bossDerrotado ? 4 : 3;
+}
 
 // Listas compartilhadas entre vários módulos (mapa, inimigos, projéteis,
 // disparos, loop principal). Os módulos só devem dar push/splice nelas,

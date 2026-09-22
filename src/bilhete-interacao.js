@@ -3,7 +3,7 @@ import { controles } from "./controles.js";
 import { estadoJogo } from "./estado.js";
 import { telaIntro, telaCapitulo2, telaBilhete, avisoAcao } from "./ui.js";
 import { objPapel } from "./bilhete3d.js";
-import { spawnarBoss } from "./boss.js";
+import { spawnarBoss } from "./oBruto.js";
 import { spawnarCaixaCapitulo2 } from "./caixas.js";
 import { somAmbiente, musicaCap2 } from "./audio.js";
 

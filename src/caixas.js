@@ -4,7 +4,7 @@ import {
   estadoJogo,
   listaCaixas,
   inventario,
-  MAX_INIMIGOS,
+  getMaxInimigos,
   recargaMunicao,
 } from "./estado.js";
 import { checarPosicaoValida } from "./mapa.js";
@@ -131,7 +131,7 @@ export class CaixaItem {
       estadoJogo.jogoIniciado = true;
       aplicarRecargaCompleta();
 
-      for (let i = 0; i < MAX_INIMIGOS; i++) {
+      for (let i = 0; i < getMaxInimigos(); i++) {
         spawnarInimigoAleatorio();
       }
     } else if (this.ehCapitulo2) {
@@ -140,10 +140,10 @@ export class CaixaItem {
       estadoJogo.saúdeMaxima = 200;
       estadoJogo.saúdePlayer = 200;
       estadoJogo.multiplicadorMunicao = 1.5;
-      estadoJogo.bossDerrotado = true;
+      estadoJogo.bossDerrotado = true; // getMaxInimigos() já passa a valer 4 daqui pra frente
       aplicarRecargaCompleta();
 
-      for (let i = 0; i < MAX_INIMIGOS; i++) {
+      for (let i = 0; i < getMaxInimigos(); i++) {
         spawnarInimigoAleatorio();
       }
     } else {

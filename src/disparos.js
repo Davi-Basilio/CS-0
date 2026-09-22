@@ -14,7 +14,7 @@ import { executarSom } from "./audio.js";
 import { GranadaProjetil } from "./projeteis.js";
 import { grupoArmasPlayer } from "./armas-visuais.js";
 import { descartarObjeto3D } from "./utils.js";
-import { boss } from "./boss.js";
+import { boss } from "./oBruto.js";
 
 const raycasterTiro = new THREE.Raycaster();
 

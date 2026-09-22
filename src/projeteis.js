@@ -5,7 +5,7 @@ import { checarPosicaoValida } from "./mapa.js";
 import { executarSom } from "./audio.js";
 import { updateHUD, verificarMortePlayer } from "./ui.js";
 import { descartarObjeto3D } from "./utils.js";
-import { boss } from "./boss.js";
+import { boss } from "./oBruto.js";
 
 const textureLoader = new THREE.TextureLoader();
 
